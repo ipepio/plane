@@ -29,6 +29,7 @@ import { ButtonAvatars } from "@/components/dropdowns/member/avatar";
 import { MemberDropdown } from "@/components/dropdowns/member/dropdown";
 import { PriorityDropdown } from "@/components/dropdowns/priority";
 import { StateDropdown } from "@/components/dropdowns/state/dropdown";
+import { TeamAssigneeDropdown } from "@/components/dropdowns/team-assignee-dropdown";
 // hooks
 import { useProjectEstimates } from "@/hooks/store/estimates";
 import { useIssueDetail } from "@/hooks/store/use-issue-detail";
@@ -118,6 +119,17 @@ export const IssueDetailsSidebar = observer(function IssueDetailsSidebar(props: 
                 hideIcon={issue.assignee_ids?.length === 0}
                 dropdownArrow
                 dropdownArrowClassName="h-3.5 w-3.5 hidden group-hover:inline"
+              />
+            </SidebarPropertyListItem>
+
+            <SidebarPropertyListItem icon={MembersPropertyIcon} label="Teams">
+              <TeamAssigneeDropdown
+                workspaceSlug={workspaceSlug}
+                value={issue?.team_assignee_ids ?? []}
+                onChange={(val) =>
+                  issueOperations.update(workspaceSlug, projectId, issueId, { team_assignee_ids: val })
+                }
+                disabled={!isEditable}
               />
             </SidebarPropertyListItem>
 

@@ -10,6 +10,7 @@ from .project.base import (
     DeployBoardViewSet,
     ProjectArchiveUnarchiveEndpoint,
 )
+from .project_template import ProjectTemplateViewSet
 
 from .project.invite import (
     UserProjectInvitationsViewset,
@@ -238,3 +239,20 @@ from .notification.base import MarkAllReadNotificationViewSet
 from .user.base import AccountEndpoint, ProfileEndpoint, UserSessionEndpoint
 
 from .timezone.base import TimezoneEndpoint
+
+from .role import RoleViewSet, MePermissionsView
+from .team import TeamViewSet
+from .workspace_sso import WorkspaceSSOConfigView
+from .workspace_intake import (
+    IntakeFormFieldOptionViewSet,
+    IntakeFormFieldViewSet,
+    WorkspaceIntakeIssueViewSet,
+    WorkspaceIntakeViewSet,
+)
+from .worklog import IssueWorklogViewSet, WorkspaceWorklogCSVExportView, WorkspaceWorklogView
+from .issue_property import (
+    IssuePropertyOptionViewSet,
+    IssuePropertyValueEndpoint,
+    IssuePropertyViewSet,
+    ProjectIssueTypeViewSet,
+)

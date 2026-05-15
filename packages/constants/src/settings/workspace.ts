@@ -56,6 +56,41 @@ export const WORKSPACE_SETTINGS: Record<TWorkspaceSettingsTabs, TWorkspaceSettin
     access: [EUserWorkspaceRoles.ADMIN],
     highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/settings/webhooks/`,
   },
+  roles: {
+    key: "roles",
+    i18n_label: "workspace_settings.settings.roles.title",
+    href: `/settings/roles`,
+    access: [EUserWorkspaceRoles.ADMIN],
+    highlight: (pathname: string, baseUrl: string) => pathname.startsWith(`${baseUrl}/settings/roles`),
+  },
+  teams: {
+    key: "teams",
+    i18n_label: "workspace_settings.settings.teams.title",
+    href: `/settings/teams`,
+    access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
+    highlight: (pathname: string, baseUrl: string) => pathname.startsWith(`${baseUrl}/settings/teams`),
+  },
+  templates: {
+    key: "templates",
+    i18n_label: "workspace_settings.settings.templates.title",
+    href: `/settings/templates`,
+    access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
+    highlight: (pathname: string, baseUrl: string) => pathname.startsWith(`${baseUrl}/settings/templates`),
+  },
+  "time-tracking": {
+    key: "time-tracking",
+    i18n_label: "workspace_settings.settings.time_tracking.title",
+    href: `/settings/reports`,
+    access: [EUserWorkspaceRoles.ADMIN, EUserWorkspaceRoles.MEMBER],
+    highlight: (pathname: string, baseUrl: string) => pathname.startsWith(`${baseUrl}/settings/reports`),
+  },
+  sso: {
+    key: "sso",
+    i18n_label: "workspace_settings.settings.sso.title",
+    href: `/settings/sso`,
+    access: [EUserWorkspaceRoles.ADMIN],
+    highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/settings/sso/`,
+  },
 };
 
 export const WORKSPACE_SETTINGS_ACCESS = Object.fromEntries(
@@ -66,6 +101,11 @@ export const GROUPED_WORKSPACE_SETTINGS: Record<WORKSPACE_SETTINGS_CATEGORY, TWo
   [WORKSPACE_SETTINGS_CATEGORY.ADMINISTRATION]: [
     WORKSPACE_SETTINGS["general"],
     WORKSPACE_SETTINGS["members"],
+    WORKSPACE_SETTINGS["teams"],
+    WORKSPACE_SETTINGS["templates"],
+    WORKSPACE_SETTINGS["time-tracking"],
+    WORKSPACE_SETTINGS["roles"],
+    WORKSPACE_SETTINGS["sso"],
     WORKSPACE_SETTINGS["billing-and-plans"],
     WORKSPACE_SETTINGS["export"],
   ],

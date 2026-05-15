@@ -18,10 +18,12 @@ import ProjectCreateButtons from "@/components/project/create/project-create-but
 // hooks
 import { getCoverImageType, uploadCoverImage } from "@/helpers/cover-image.helper";
 import { useProject } from "@/hooks/store/use-project";
+import { useProjectTemplate } from "@/hooks/store/use-project-template";
 import { usePlatformOS } from "@/hooks/use-platform-os";
 // plane web types
 import type { TProject } from "@/plane-web/types/projects";
 import { ProjectAttributes } from "./attributes";
+import { ProjectTemplateSelect } from "./template-select";
 import { getProjectFormValues } from "./utils";
 
 export type TCreateProjectFormProps = {
@@ -39,8 +41,10 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
   // store
   const { t } = useTranslation();
   const { addProjectToFavorites, createProject, updateProject } = useProject();
+  const projectTemplateStore = useProjectTemplate();
   // states
   const [shouldAutoSyncIdentifier, setShouldAutoSyncIdentifier] = useState(true);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(props.templateId ?? "");
   // form info
   const methods = useForm<TProject>({
     defaultValues: { ...getProjectFormValues(), ...data },
@@ -63,6 +67,33 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
   const onSubmit = async (formData: Partial<TProject>) => {
     // Upper case identifier
     formData.identifier = formData.identifier?.toUpperCase();
+    if (selectedTemplateId && formData.identifier) {
+      try {
+        const res = await projectTemplateStore.instantiate(workspaceSlug.toString(), selectedTemplateId, {
+          name: formData.name,
+          identifier: formData.identifier,
+        });
+        setToast({
+          type: TOAST_TYPE.SUCCESS,
+          title: t("success"),
+          message: t("project_created_successfully"),
+        });
+
+        if (setToFavorite) {
+          handleAddToFavorites(res.id);
+        }
+        handleNextStep(res.id);
+        return;
+      } catch {
+        setToast({
+          type: TOAST_TYPE.ERROR,
+          title: t("toast.error"),
+          message: t("something_went_wrong"),
+        });
+        return;
+      }
+    }
+
     const coverImage = formData.cover_image_url;
     let uploadedAssetUrl: string | null = null;
 
@@ -111,6 +142,7 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
           handleAddToFavorites(res.id);
         }
         handleNextStep(res.id);
+        return res;
       })
       .catch((err) => {
         try {
@@ -158,6 +190,7 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
   const handleClose = () => {
     onClose();
     setShouldAutoSyncIdentifier(true);
+    setSelectedTemplateId(props.templateId ?? "");
     setTimeout(() => {
       reset();
     }, 300);
@@ -174,6 +207,11 @@ export const CreateProjectForm = observer(function CreateProjectForm(props: TCre
             isMobile={isMobile}
             shouldAutoSyncIdentifier={shouldAutoSyncIdentifier}
             setShouldAutoSyncIdentifier={setShouldAutoSyncIdentifier}
+          />
+          <ProjectTemplateSelect
+            workspaceSlug={workspaceSlug.toString()}
+            value={selectedTemplateId}
+            onChange={setSelectedTemplateId}
           />
           <ProjectAttributes isMobile={isMobile} />
         </div>

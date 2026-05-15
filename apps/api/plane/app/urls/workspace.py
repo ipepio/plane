@@ -36,6 +36,7 @@ from plane.app.views import (
     WorkspaceHomePreferenceViewSet,
     WorkspaceStickyViewSet,
     WorkspaceUserPreferenceViewSet,
+    TeamViewSet,
 )
 
 
@@ -103,6 +104,31 @@ urlpatterns = [
         "workspaces/<str:slug>/members/leave/",
         WorkSpaceMemberViewSet.as_view({"post": "leave"}),
         name="leave-workspace-members",
+    ),
+    path(
+        "workspaces/<str:slug>/teams/",
+        TeamViewSet.as_view({"get": "list", "post": "create"}),
+        name="workspace-teams",
+    ),
+    path(
+        "workspaces/<str:slug>/teams/search/",
+        TeamViewSet.as_view({"get": "search"}),
+        name="workspace-teams-search",
+    ),
+    path(
+        "workspaces/<str:slug>/teams/<uuid:pk>/",
+        TeamViewSet.as_view({"get": "retrieve", "patch": "partial_update", "put": "update", "delete": "destroy"}),
+        name="workspace-teams",
+    ),
+    path(
+        "workspaces/<str:slug>/teams/<uuid:pk>/members/",
+        TeamViewSet.as_view({"post": "add_members"}),
+        name="workspace-team-members",
+    ),
+    path(
+        "workspaces/<str:slug>/teams/<uuid:pk>/members/<uuid:member_id>/",
+        TeamViewSet.as_view({"patch": "update_member", "delete": "remove_member"}),
+        name="workspace-team-members",
     ),
     path(
         "users/last-visited-workspace/",

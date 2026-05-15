@@ -166,6 +166,7 @@ export const SidebarProjectsList = observer(function SidebarProjectsList() {
       <div
         ref={containerRef}
         className={cn({
+          "overflow-y-auto": true,
           "border-t border-strong": isScrolled,
         })}
       >

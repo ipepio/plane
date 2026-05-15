@@ -5,8 +5,8 @@
 # Django imports
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
-from django.db.models import Q, UUIDField, Value, QuerySet, OuterRef, Subquery
-from django.db.models.functions import Coalesce
+from django.db.models import CharField, Q, UUIDField, Value, QuerySet, OuterRef, Subquery
+from django.db.models.functions import Cast, Coalesce
 
 # Module imports
 from plane.db.models import (
@@ -21,6 +21,7 @@ from plane.db.models import (
     IssueAssignee,
     ModuleIssue,
     IssueLabel,
+    IssuePropertyValue,
 )
 from typing import Optional, Dict, Tuple, Any, Union, List
 
@@ -90,6 +91,25 @@ def issue_queryset_grouper(
     return queryset.annotate(**default_annotations)
 
 
+def annotate_issue_property_group(queryset: QuerySet[Issue], property_id: str, annotation: str = "property_group_value"):
+    property_value_subquery = (
+        IssuePropertyValue.objects.filter(issue_id=OuterRef("id"), property_id=property_id, deleted_at__isnull=True)
+        .annotate(
+            property_value=Coalesce(
+                "value_text",
+                Cast("value_number", output_field=CharField()),
+                Cast("value_boolean", output_field=CharField()),
+                Cast("value_datetime", output_field=CharField()),
+                Cast("value_user_id", output_field=CharField()),
+                Cast("value_option_id", output_field=CharField()),
+                output_field=CharField(),
+            )
+        )
+        .values("property_value")[:1]
+    )
+    return queryset.annotate(**{annotation: Subquery(property_value_subquery)})
+
+
 def issue_on_results(
     issues: QuerySet[Issue],
     group_by: Optional[str],
@@ -128,6 +148,11 @@ def issue_on_results(
         "archived_at",
         "state__group",
     ]
+
+    if group_by == "property_group_value":
+        required_fields.append("property_group_value")
+    if sub_group_by == "property_sub_group_value":
+        required_fields.append("property_sub_group_value")
 
     if group_by in FIELD_MAPPER:
         original_list.remove(FIELD_MAPPER[group_by])
@@ -213,5 +238,8 @@ def issue_group_values(
             return list(queryset.filter(project_id=project_id))
         else:
             return list(queryset)
+
+    if field in ["property_group_value", "property_sub_group_value"] and queryset is not None:
+        return list(queryset.values_list(field, flat=True).distinct()) + ["None"]
 
     return []

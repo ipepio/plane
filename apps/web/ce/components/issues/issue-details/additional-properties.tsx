@@ -4,8 +4,7 @@
  * See the LICENSE file for details.
  */
 
-import React from "react";
-// plane imports
+import { CustomSidebarProperties } from "@/components/issues/issue-detail/custom-properties/sidebar-properties";
 
 export type TWorkItemAdditionalSidebarProperties = {
   workItemId: string;
@@ -17,5 +16,5 @@ export type TWorkItemAdditionalSidebarProperties = {
 };
 
 export function WorkItemAdditionalSidebarProperties(_props: TWorkItemAdditionalSidebarProperties) {
-  return <></>;
+  return <CustomSidebarProperties {..._props} />;
 }

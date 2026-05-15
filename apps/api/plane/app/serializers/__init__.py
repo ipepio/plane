@@ -58,6 +58,7 @@ from .issue import (
     IssueCommentSerializer,
     ProjectUserPropertySerializer,
     IssueAssigneeSerializer,
+    IssueTeamAssigneeSerializer,
     LabelSerializer,
     IssueSerializer,
     IssueFlatSerializer,
@@ -116,6 +117,17 @@ from .intake import (
     IssueStateIntakeSerializer,
     IntakeIssueLiteSerializer,
     IntakeIssueDetailSerializer,
+    IntakeFormFieldSerializer,
+    IntakeFormFieldOptionSerializer,
+    IntakeFormFieldValueReadSerializer,
+    persist_workspace_intake_form_values,
+    render_workspace_intake_form_values_html,
+    WorkspaceIntakeSerializer,
+    WorkspaceIntakeIssueSerializer,
+    WorkspaceIntakeAcceptSerializer,
+    WorkspaceIntakeRejectSerializer,
+    WorkspaceIntakeSnoozeSerializer,
+    WorkspaceIntakeDuplicateSerializer,
 )
 
 from .analytic import AnalyticViewSerializer
@@ -132,4 +144,21 @@ from .draft import (
     DraftIssueCreateSerializer,
     DraftIssueSerializer,
     DraftIssueDetailSerializer,
+)
+
+from .role import PermissionSerializer, RoleSerializer, RoleCreateSerializer
+from .workspace_sso import WorkspaceSSOConfigSerializer
+from .team import TeamDetailSerializer, TeamMemberBulkCreateSerializer, TeamMemberSerializer, TeamSerializer
+from .worklog import IssueWorklogSerializer, WorkspaceWorklogReadSerializer
+from .issue_property import (
+    IssuePropertyOptionSerializer,
+    IssuePropertySerializer,
+    IssuePropertyValueSerializer,
+    IssueTypeLiteSerializer,
+    ProjectIssueTypeSerializer,
+)
+from .project_template import (
+    ProjectTemplateInstantiateSerializer,
+    ProjectTemplateSaveAsSerializer,
+    ProjectTemplateSerializer,
 )

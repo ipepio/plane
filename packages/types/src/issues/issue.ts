@@ -8,6 +8,7 @@ import type { TIssuePriorities } from "../issues";
 import type { TStateGroups } from "../state";
 import type { TIssuePublicComment } from "./activity/issue_comment";
 import type { TIssueAttachment } from "./issue_attachment";
+import type { TIssuePropertyValuePayload } from "./issue-property";
 import type { TIssueLink } from "./issue_link";
 import type { TIssueReaction, IIssuePublicReaction, IPublicVote } from "./issue_reaction";
 import type { TIssueRelationTypes } from "./issue_relation";
@@ -52,6 +53,7 @@ export type TBaseIssue = {
   priority: TIssuePriorities | null;
   label_ids: string[];
   assignee_ids: string[];
+  team_assignee_ids?: string[];
   estimate_point: string | null;
 
   sub_issues_count: number;
@@ -96,6 +98,7 @@ export type TIssue = TBaseIssue & {
   issue_link?: TIssueLink[];
   issue_relation?: IssueRelation[];
   issue_related?: IssueRelation[];
+  property_values?: TIssuePropertyValuePayload[];
   // tempId is used for optimistic updates. It is not a part of the API response.
   tempId?: string;
   // sourceIssueId is used to store the original issue id when creating a copy of an issue. Used in cloning property values. It is not a part of the API response.
@@ -143,6 +146,7 @@ export type TBulkIssueProperties = Pick<
   | "priority"
   | "label_ids"
   | "assignee_ids"
+  | "team_assignee_ids"
   | "start_date"
   | "target_date"
   | "module_ids"
@@ -178,6 +182,7 @@ export interface IPublicIssue extends Pick<
   | "module_ids"
   | "label_ids"
   | "assignee_ids"
+  | "team_assignee_ids"
   | "attachment_count"
   | "sub_issues_count"
   | "link_count"

@@ -5,7 +5,9 @@
 import re
 import uuid
 from datetime import timedelta
+from decimal import Decimal, InvalidOperation
 
+from django.db.models import Q
 from django.utils import timezone
 
 # The date from pattern
@@ -171,6 +173,24 @@ def filter_assignees(params, issue_filter, method, prefix=""):
         if params.get("assignees", None) and len(params.get("assignees")) and params.get("assignees") != "null":
             issue_filter[f"{prefix}assignees__in"] = params.get("assignees")
     issue_filter[f"{prefix}issue_assignee__deleted_at__isnull"] = True
+    return issue_filter
+
+
+def filter_team_assignees(params, issue_filter, method, prefix=""):
+    if method == "GET":
+        team_assignees = [item for item in params.get("team_assignees").split(",") if item != "null"]
+        team_assignees = filter_valid_uuids(team_assignees)
+        if len(team_assignees) and "" not in team_assignees:
+            issue_filter[f"{prefix}issue_team_assignee__team_id__in"] = team_assignees
+    else:
+        if (
+            params.get("team_assignees", None)
+            and len(params.get("team_assignees"))
+            and params.get("team_assignees") != "null"
+        ):
+            issue_filter[f"{prefix}issue_team_assignee__team_id__in"] = params.get("team_assignees")
+    issue_filter[f"{prefix}issue_team_assignee__deleted_at__isnull"] = True
+    issue_filter[f"{prefix}issue_team_assignee__team__deleted_at__isnull"] = True
     return issue_filter
 
 
@@ -436,6 +456,7 @@ def issue_filters(query_params, method, prefix=""):
         "parent": filter_parent,
         "labels": filter_labels,
         "assignees": filter_assignees,
+        "team_assignees": filter_team_assignees,
         "mentions": filter_mentions,
         "created_by": filter_created_by,
         "logged_by": filter_logged_by,
@@ -461,3 +482,49 @@ def issue_filters(query_params, method, prefix=""):
             func = value
             func(query_params, issue_filter, method, prefix)
     return issue_filter
+
+
+def apply_issue_property_filters(queryset, query_params):
+    raw_filters = query_params.getlist("property_filters") if hasattr(query_params, "getlist") else []
+    if not raw_filters and query_params.get("property_filters"):
+        raw_filters = [query_params.get("property_filters")]
+
+    parsed_filters = []
+    for raw_filter in raw_filters:
+        for filter_part in str(raw_filter).split(","):
+            if ":" not in filter_part:
+                continue
+            property_id, value = filter_part.split(":", 1)
+            try:
+                uuid.UUID(property_id)
+            except ValueError:
+                continue
+            if value == "":
+                continue
+            parsed_filters.append((property_id, value))
+
+    for property_id, value in parsed_filters:
+        value_query = Q(property_values__value_text__icontains=value)
+        try:
+            value_query = value_query | Q(property_values__value_number__exact=Decimal(value))
+        except (InvalidOperation, TypeError):
+            pass
+        if value.lower() in ["true", "1", "yes", "false", "0", "no"]:
+            value_query = value_query | Q(property_values__value_boolean__exact=value.lower() in ["true", "1", "yes"])
+        try:
+            uuid.UUID(value)
+            value_query = (
+                value_query
+                | Q(property_values__value_user_id=value)
+                | Q(property_values__value_option_id=value)
+                | Q(property_values__selected_options__option_id=value)
+            )
+        except ValueError:
+            pass
+
+        queryset = queryset.filter(
+            property_values__property_id=property_id,
+            property_values__deleted_at__isnull=True,
+        ).filter(value_query)
+
+    return queryset.distinct() if parsed_filters else queryset

@@ -15,6 +15,13 @@ from plane.authentication.provider.oauth.google import GoogleOAuthProvider
 from plane.authentication.utils.login import user_login
 from plane.authentication.utils.redirection_path import get_redirection_path
 from plane.authentication.utils.user_auth_workflow import post_user_auth_workflow
+from plane.authentication.utils.sso import (
+    SSORestrictedError,
+    auto_provision_membership,
+    enforce_sso_or_fail,
+    find_eligible_workspaces,
+    get_workspace_from_next_path,
+)
 from plane.license.models import Instance
 from plane.authentication.utils.host import base_host
 from plane.authentication.adapter.error import (
@@ -87,6 +94,12 @@ class GoogleCallbackEndpoint(View):
         try:
             provider = GoogleOAuthProvider(request=request, code=code, callback=post_user_auth_workflow)
             user = provider.authenticate()
+            email = provider.user_data.get("email")
+            target_workspace = get_workspace_from_next_path(next_path)
+            if target_workspace is not None:
+                enforce_sso_or_fail(target_workspace, email)
+            for workspace in find_eligible_workspaces(email):
+                auto_provision_membership(user, workspace)
             # Login the user and record his device info
             user_login(request=request, user=user, is_app=True)
             # Get the redirection path
@@ -100,5 +113,12 @@ class GoogleCallbackEndpoint(View):
             params = e.get_error_dict()
             url = get_safe_redirect_url(
                 base_url=base_host(request=request, is_app=True), next_path=next_path, params=params
+            )
+            return HttpResponseRedirect(url)
+        except SSORestrictedError as e:
+            url = get_safe_redirect_url(
+                base_url=base_host(request=request, is_app=True),
+                next_path="/",
+                params={"error": "sso_blocked", "ws": e.workspace_slug},
             )
             return HttpResponseRedirect(url)

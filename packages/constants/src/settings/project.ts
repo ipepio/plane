@@ -93,6 +93,13 @@ export const PROJECT_SETTINGS: Record<TProjectSettingsTabs, TProjectSettingsItem
     access: [EUserProjectRoles.ADMIN],
     highlight: (pathname: string, baseUrl: string) => pathname === `${baseUrl}/estimates/`,
   },
+  issue_types: {
+    key: "issue_types",
+    i18n_label: "project_settings.issue_types.short_title",
+    href: `/issue-types`,
+    access: [EUserProjectRoles.ADMIN],
+    highlight: (pathname: string, baseUrl: string) => pathname.startsWith(`${baseUrl}/issue-types`),
+  },
   automations: {
     key: "automations",
     i18n_label: "project_settings.automations.label",
@@ -117,6 +124,7 @@ export const GROUPED_PROJECT_SETTINGS: Record<PROJECT_SETTINGS_CATEGORY, TProjec
     PROJECT_SETTINGS["states"],
     PROJECT_SETTINGS["labels"],
     PROJECT_SETTINGS["estimates"],
+    PROJECT_SETTINGS["issue_types"],
   ],
   [PROJECT_SETTINGS_CATEGORY.EXECUTION]: [PROJECT_SETTINGS["automations"]],
 };

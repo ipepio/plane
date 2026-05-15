@@ -360,6 +360,28 @@ class IssueAssignee(ProjectBaseModel):
         return f"{self.issue.name} {self.assignee.email}"
 
 
+class IssueTeamAssignee(ProjectBaseModel):
+    issue = models.ForeignKey(Issue, on_delete=models.CASCADE, related_name="issue_team_assignee")
+    team = models.ForeignKey("db.Team", on_delete=models.CASCADE, related_name="issue_team_assignee")
+
+    class Meta:
+        unique_together = ["issue", "team", "deleted_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["issue", "team"],
+                condition=Q(deleted_at__isnull=True),
+                name="issue_team_assignee_unique_issue_team_when_deleted_at_null",
+            )
+        ]
+        verbose_name = "Issue Team Assignee"
+        verbose_name_plural = "Issue Team Assignees"
+        db_table = "issue_team_assignees"
+        ordering = ("-created_at",)
+
+    def __str__(self):
+        return f"{self.issue.name} {self.team.name}"
+
+
 class IssueLink(ProjectBaseModel):
     title = models.CharField(max_length=255, null=True, blank=True)
     url = models.TextField()

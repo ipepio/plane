@@ -22,6 +22,12 @@ from .webhook import urlpatterns as webhook_urls
 from .workspace import urlpatterns as workspace_urls
 from .timezone import urlpatterns as timezone_urls
 from .exporter import urlpatterns as exporter_urls
+from .role import urlpatterns as role_urls
+from .workspace_sso import urlpatterns as workspace_sso_urls
+from .workspace_intake import urlpatterns as workspace_intake_urls
+from .worklog import urlpatterns as worklog_urls
+from .issue_property import urlpatterns as issue_property_urls
+from .project_template import urlpatterns as project_template_urls
 
 urlpatterns = [
     *analytic_urls,
@@ -44,4 +50,10 @@ urlpatterns = [
     *webhook_urls,
     *timezone_urls,
     *exporter_urls,
+    *role_urls,
+    *workspace_sso_urls,
+    *workspace_intake_urls,
+    *worklog_urls,
+    *issue_property_urls,
+    *project_template_urls,
 ]

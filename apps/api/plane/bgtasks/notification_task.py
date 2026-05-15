@@ -23,6 +23,7 @@ from plane.db.models import (
     IssueActivity,
     UserNotificationPreference,
     ProjectMember,
+    TeamMember,
 )
 from django.db.models import Subquery
 
@@ -142,6 +143,26 @@ def extract_comment_mentions(comment_value):
         return []
 
 
+def extract_comment_team_mentions(comment_value, workspace_id):
+    try:
+        soup = BeautifulSoup(comment_value, "html.parser")
+        team_ids = [
+            mention_tag["entity_identifier"]
+            for mention_tag in soup.find_all("mention-component", attrs={"entity_name": "team_mention"})
+        ]
+        if not team_ids:
+            return []
+        members = TeamMember.objects.filter(
+            workspace_id=workspace_id,
+            team_id__in=team_ids,
+            team__deleted_at__isnull=True,
+            deleted_at__isnull=True,
+        ).values_list("member_id", flat=True)
+        return [str(member_id) for member_id in members]
+    except Exception:
+        return []
+
+
 def get_new_comment_mentions(new_value, old_value):
     mentions_newer = extract_comment_mentions(new_value)
     if old_value is None:
@@ -239,6 +260,7 @@ def notifications(
 
             comment_mentions = []
             all_comment_mentions = []
+            issue = Issue.objects.filter(pk=issue_id).first()
 
             # Get New Subscribers from the mentions of the newer instance
             requested_mentions = extract_mentions(issue_instance=requested_data)
@@ -253,16 +275,23 @@ def notifications(
                 if issue_comment is not None:
                     # TODO: Maybe save the comment mentions, so that in future, we can filter out the issues based on comment mentions as well.
 
+                    team_comment_mentions = extract_comment_team_mentions(
+                        issue_comment_new_value,
+                        issue.workspace_id if issue is not None else None,
+                    )
                     all_comment_mentions = all_comment_mentions + extract_comment_mentions(issue_comment_new_value)
+                    all_comment_mentions = all_comment_mentions + team_comment_mentions
 
                     new_comment_mentions = get_new_comment_mentions(
                         old_value=issue_comment_old_value,
                         new_value=issue_comment_new_value,
                     )
+                    new_comment_mentions = list(set(new_comment_mentions + team_comment_mentions))
                     comment_mentions = comment_mentions + new_comment_mentions
                     comment_mentions = [
                         mention for mention in comment_mentions if UUID(mention) in set(project_members)
                     ]
+                    comment_mentions = list(set(comment_mentions))
 
             comment_mention_subscribers = extract_mentions_as_subscribers(
                 project_id=project_id, issue_id=issue_id, mentions=all_comment_mentions
@@ -286,8 +315,6 @@ def notifications(
                 .exclude(subscriber_id__in=list(new_mentions + comment_mentions + [actor_id]))
                 .values_list("subscriber", flat=True)
             )
-
-            issue = Issue.objects.filter(pk=issue_id).first()
 
             if subscriber:
                 # add the user to issue subscriber

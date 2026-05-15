@@ -6,17 +6,19 @@
 
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router";
-import { LogOut, MoreHorizontal, Settings, Share2, ArchiveIcon } from "lucide-react";
+import { ClipboardPlus, LogOut, MoreHorizontal, Settings, Share2, ArchiveIcon } from "lucide-react";
 // plane imports
 import { MEMBER_TRACKER_ELEMENTS } from "@plane/constants";
 import { useTranslation } from "@plane/i18n";
 import { LinkIcon } from "@plane/propel/icons";
 import { CustomMenu } from "@plane/ui";
+import { SaveAsProjectTemplateModal } from "@/components/project/templates/save-as-template-modal";
 
 type Props = {
   workspaceSlug: string;
   project: {
     id: string;
+    name?: string;
   };
   isAdmin: boolean;
   isAuthorized: boolean;
@@ -36,83 +38,102 @@ export function ProjectActionsMenu({
 }: Props) {
   // states
   const [isMenuActive, setIsMenuActive] = useState(false);
+  const [saveAsTemplateOpen, setSaveAsTemplateOpen] = useState(false);
   // translation
   const { t } = useTranslation();
   // refs
-  const actionSectionRef = useRef<HTMLDivElement | null>(null);
+  const actionSectionRef = useRef<HTMLButtonElement | null>(null);
   // router
   const navigate = useNavigate();
 
   return (
-    <CustomMenu
-      customButton={
-        <span
-          ref={actionSectionRef}
-          className="grid place-items-center rounded-sm p-0.5 text-placeholder hover:bg-layer-1"
-          onClick={() => setIsMenuActive(!isMenuActive)}
-        >
-          <MoreHorizontal className="size-4" />
-        </span>
-      }
-      className="flex-shrink-0"
-      customButtonClassName="grid place-items-center"
-      placement="bottom-start"
-      ariaLabel={t("aria_labels.projects_sidebar.toggle_quick_actions_menu")}
-      useCaptureForOutsideClick
-      closeOnSelect
-      onMenuClose={() => setIsMenuActive(false)}
-    >
-      {/* Publish project settings */}
-      {isAdmin && (
-        <CustomMenu.MenuItem onClick={onPublishModal}>
-          <div className="relative flex flex-shrink-0 items-center justify-start gap-2">
-            <div className="flex h-4 w-4 cursor-pointer items-center justify-center rounded-sm text-secondary transition-all duration-300 hover:bg-layer-1">
-              <Share2 className="h-3.5 w-3.5 stroke-[1.5]" />
+    <>
+      <SaveAsProjectTemplateModal
+        isOpen={saveAsTemplateOpen}
+        onClose={() => setSaveAsTemplateOpen(false)}
+        workspaceSlug={workspaceSlug}
+        projectId={project.id}
+        projectName={project.name}
+      />
+      <CustomMenu
+        customButton={
+          <button
+            type="button"
+            ref={actionSectionRef}
+            className="grid place-items-center rounded-sm p-0.5 text-placeholder hover:bg-layer-1"
+            onClick={() => setIsMenuActive(!isMenuActive)}
+          >
+            <MoreHorizontal className="size-4" />
+          </button>
+        }
+        className="flex-shrink-0"
+        customButtonClassName="grid place-items-center"
+        placement="bottom-start"
+        ariaLabel={t("aria_labels.projects_sidebar.toggle_quick_actions_menu")}
+        useCaptureForOutsideClick
+        closeOnSelect
+        onMenuClose={() => setIsMenuActive(false)}
+      >
+        {/* Publish project settings */}
+        {isAdmin && (
+          <CustomMenu.MenuItem onClick={onPublishModal}>
+            <div className="relative flex flex-shrink-0 items-center justify-start gap-2">
+              <div className="flex h-4 w-4 cursor-pointer items-center justify-center rounded-sm text-secondary transition-all duration-300 hover:bg-layer-1">
+                <Share2 className="h-3.5 w-3.5 stroke-[1.5]" />
+              </div>
+              <div>{t("publish_project")}</div>
             </div>
-            <div>{t("publish_project")}</div>
-          </div>
+          </CustomMenu.MenuItem>
+        )}
+        {isAdmin && (
+          <CustomMenu.MenuItem onClick={() => setSaveAsTemplateOpen(true)}>
+            <div className="flex cursor-pointer items-center justify-start gap-2">
+              <ClipboardPlus className="h-3.5 w-3.5 stroke-[1.5]" />
+              <span>Save as template</span>
+            </div>
+          </CustomMenu.MenuItem>
+        )}
+        <CustomMenu.MenuItem onClick={onCopyText}>
+          <span className="flex items-center justify-start gap-2">
+            <LinkIcon className="h-3.5 w-3.5 stroke-[1.5]" />
+            <span>{t("copy_link")}</span>
+          </span>
         </CustomMenu.MenuItem>
-      )}
-      <CustomMenu.MenuItem onClick={onCopyText}>
-        <span className="flex items-center justify-start gap-2">
-          <LinkIcon className="h-3.5 w-3.5 stroke-[1.5]" />
-          <span>{t("copy_link")}</span>
-        </span>
-      </CustomMenu.MenuItem>
-      {isAuthorized && (
+        {isAuthorized && (
+          <CustomMenu.MenuItem
+            onClick={() => {
+              navigate(`/${workspaceSlug}/projects/${project?.id}/archives/issues`);
+            }}
+          >
+            <div className="flex cursor-pointer items-center justify-start gap-2">
+              <ArchiveIcon className="h-3.5 w-3.5 stroke-[1.5]" />
+              <span>{t("archives")}</span>
+            </div>
+          </CustomMenu.MenuItem>
+        )}
         <CustomMenu.MenuItem
           onClick={() => {
-            navigate(`/${workspaceSlug}/projects/${project?.id}/archives/issues`);
+            navigate(`/${workspaceSlug}/settings/projects/${project?.id}`);
           }}
         >
           <div className="flex cursor-pointer items-center justify-start gap-2">
-            <ArchiveIcon className="h-3.5 w-3.5 stroke-[1.5]" />
-            <span>{t("archives")}</span>
+            <Settings className="h-3.5 w-3.5 stroke-[1.5]" />
+            <span>{t("settings")}</span>
           </div>
         </CustomMenu.MenuItem>
-      )}
-      <CustomMenu.MenuItem
-        onClick={() => {
-          navigate(`/${workspaceSlug}/settings/projects/${project?.id}`);
-        }}
-      >
-        <div className="flex cursor-pointer items-center justify-start gap-2">
-          <Settings className="h-3.5 w-3.5 stroke-[1.5]" />
-          <span>{t("settings")}</span>
-        </div>
-      </CustomMenu.MenuItem>
-      {/* Leave project */}
-      {!isAuthorized && (
-        <CustomMenu.MenuItem
-          onClick={onLeaveProject}
-          data-ph-element={MEMBER_TRACKER_ELEMENTS.SIDEBAR_PROJECT_QUICK_ACTIONS}
-        >
-          <div className="flex items-center justify-start gap-2">
-            <LogOut className="h-3.5 w-3.5 stroke-[1.5]" />
-            <span>{t("leave_project")}</span>
-          </div>
-        </CustomMenu.MenuItem>
-      )}
-    </CustomMenu>
+        {/* Leave project */}
+        {!isAuthorized && (
+          <CustomMenu.MenuItem
+            onClick={onLeaveProject}
+            data-ph-element={MEMBER_TRACKER_ELEMENTS.SIDEBAR_PROJECT_QUICK_ACTIONS}
+          >
+            <div className="flex items-center justify-start gap-2">
+              <LogOut className="h-3.5 w-3.5 stroke-[1.5]" />
+              <span>{t("leave_project")}</span>
+            </div>
+          </CustomMenu.MenuItem>
+        )}
+      </CustomMenu>
+    </>
   );
 }

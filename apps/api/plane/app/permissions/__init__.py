@@ -19,3 +19,9 @@ from .project import (
 )
 from .base import allow_permission, ROLE
 from .page import ProjectPagePermission
+from .role_permission import (
+    has_permission,
+    has_permission_for_request,
+    HasWorkspacePermission,
+    require_permission,
+)

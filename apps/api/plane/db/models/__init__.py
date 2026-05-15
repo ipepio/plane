@@ -18,7 +18,16 @@ from .draft import (
 from .estimate import Estimate, EstimatePoint
 from .exporter import ExporterHistory
 from .importer import Importer
-from .intake import Intake, IntakeIssue
+from .intake import (
+    Intake,
+    IntakeFormField,
+    IntakeFormFieldOption,
+    IntakeFormFieldValue,
+    IntakeFormFieldValueOption,
+    IntakeIssue,
+    WorkspaceIntake,
+    WorkspaceIntakeIssue,
+)
 from .integration import (
     GithubCommentSync,
     GithubIssueSync,
@@ -33,6 +42,7 @@ from .issue import (
     Issue,
     IssueActivity,
     IssueAssignee,
+    IssueTeamAssignee,
     IssueBlocker,
     IssueComment,
     IssueLabel,
@@ -59,12 +69,15 @@ from .project import (
     ProjectPublicMember,
     ProjectUserProperty,
 )
+from .project_template import ProjectTemplate
 from .session import Session
 from .social_connection import SocialLoginConnection
 from .state import State, StateGroup, DEFAULT_STATES
+from .team import Team, TeamMember
 from .user import Account, Profile, User, BotTypeEnum
 from .view import IssueView
 from .webhook import Webhook, WebhookLog
+from .worklog import IssueWorklog
 from .workspace import (
     Workspace,
     WorkspaceBaseModel,
@@ -76,10 +89,18 @@ from .workspace import (
     WorkspaceHomePreference,
     WorkspaceUserPreference,
 )
+from .workspace_sso import WorkspaceSSOConfig
 
 from .favorite import UserFavorite
 
-from .issue_type import IssueType
+from .issue_type import IssueType, ProjectIssueType
+from .issue_property import (
+    IssueProperty,
+    IssuePropertyOption,
+    IssuePropertyType,
+    IssuePropertyValue,
+    IssuePropertyValueOption,
+)
 
 from .recent_visit import UserRecentVisit
 
@@ -90,3 +111,5 @@ from .device import Device, DeviceSession
 from .sticky import Sticky
 
 from .description import Description, DescriptionVersion
+
+from .role import Permission, Role, RolePermission

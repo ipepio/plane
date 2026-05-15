@@ -50,6 +50,7 @@ from plane.db.models import (
     IntakeIssue,
     Issue,
     IssueAssignee,
+    IssueTeamAssignee,
     IssueLabel,
     IssueLink,
     IssueReaction,
@@ -64,17 +65,32 @@ from plane.db.models import (
 from plane.utils.filters import ComplexFilterBackend, IssueFilterSet
 from plane.utils.global_paginator import paginate
 from plane.utils.grouper import (
+    annotate_issue_property_group,
     issue_group_values,
     issue_on_results,
     issue_queryset_grouper,
 )
 from plane.utils.host import base_host
-from plane.utils.issue_filters import issue_filters
+from plane.utils.issue_filters import apply_issue_property_filters, issue_filters
 from plane.utils.order_queryset import order_issue_queryset
 from plane.utils.paginator import GroupedOffsetPaginator, SubGroupedOffsetPaginator
 from plane.utils.timezone_converter import user_timezone_converter
 
 from .. import BaseAPIView, BaseViewSet
+
+
+def _apply_property_grouping(issue_queryset, group_by, sub_group_by):
+    if isinstance(group_by, str) and group_by.startswith("property."):
+        property_id = group_by.split(".", 1)[1]
+        issue_queryset = annotate_issue_property_group(issue_queryset, property_id, "property_group_value")
+        group_by = "property_group_value"
+
+    if isinstance(sub_group_by, str) and sub_group_by.startswith("property."):
+        property_id = sub_group_by.split(".", 1)[1]
+        issue_queryset = annotate_issue_property_group(issue_queryset, property_id, "property_sub_group_value")
+        sub_group_by = "property_sub_group_value"
+
+    return issue_queryset, group_by, sub_group_by
 
 
 class IssueListEndpoint(BaseAPIView):
@@ -99,6 +115,7 @@ class IssueListEndpoint(BaseAPIView):
         # Apply legacy filters
         filters = issue_filters(request.query_params, "GET")
         issue_queryset = queryset.filter(**filters)
+        issue_queryset = apply_issue_property_filters(issue_queryset, request.query_params)
         issue_queryset = issue_queryset.filter(state__deleted_at__isnull=True)
 
         # Add select_related, prefetch_related if fields or expand is not None
@@ -145,6 +162,15 @@ class IssueListEndpoint(BaseAPIView):
         # Group by
         group_by = request.GET.get("group_by", False)
         sub_group_by = request.GET.get("sub_group_by", False)
+        if isinstance(group_by, str) and group_by.startswith("property."):
+            filtered_issue_queryset = annotate_issue_property_group(
+                filtered_issue_queryset, group_by.split(".", 1)[1], "property_group_value"
+            )
+        if isinstance(sub_group_by, str) and sub_group_by.startswith("property."):
+            filtered_issue_queryset = annotate_issue_property_group(
+                filtered_issue_queryset, sub_group_by.split(".", 1)[1], "property_sub_group_value"
+            )
+        issue_queryset, group_by, sub_group_by = _apply_property_grouping(issue_queryset, group_by, sub_group_by)
 
         # issue queryset
         issue_queryset = issue_queryset_grouper(queryset=issue_queryset, group_by=group_by, sub_group_by=sub_group_by)
@@ -269,6 +295,7 @@ class IssueViewSet(BaseViewSet):
 
         # Apply legacy filters
         issue_queryset = issue_queryset.filter(**filters, **extra_filters)
+        issue_queryset = apply_issue_property_filters(issue_queryset, request.query_params)
 
         # Keeping a copy of the queryset before applying annotations
         filtered_issue_queryset = copy.deepcopy(issue_queryset)
@@ -284,6 +311,7 @@ class IssueViewSet(BaseViewSet):
         # Group by
         group_by = request.GET.get("group_by", False)
         sub_group_by = request.GET.get("sub_group_by", False)
+        issue_queryset, group_by, sub_group_by = _apply_property_grouping(issue_queryset, group_by, sub_group_by)
 
         # issue queryset
         issue_queryset = issue_queryset_grouper(queryset=issue_queryset, group_by=group_by, sub_group_by=sub_group_by)
@@ -538,6 +566,19 @@ class IssueViewSet(BaseViewSet):
                     ),
                     Value([], output_field=ArrayField(UUIDField())),
                 ),
+                team_assignee_ids=Coalesce(
+                    Subquery(
+                        IssueTeamAssignee.objects.filter(
+                            issue_id=OuterRef("pk"),
+                            team__deleted_at__isnull=True,
+                            deleted_at__isnull=True,
+                        )
+                        .values("issue_id")
+                        .annotate(arr=ArrayAgg("team_id", distinct=True))
+                        .values("arr")
+                    ),
+                    Value([], output_field=ArrayField(UUIDField())),
+                ),
                 module_ids=Coalesce(
                     Subquery(
                         ModuleIssue.objects.filter(
@@ -665,7 +706,12 @@ class IssueViewSet(BaseViewSet):
         current_instance = json.dumps(IssueDetailSerializer(issue).data, cls=DjangoJSONEncoder)
 
         requested_data = json.dumps(self.request.data, cls=DjangoJSONEncoder)
-        serializer = IssueCreateSerializer(issue, data=request.data, partial=True, context={"project_id": project_id})
+        serializer = IssueCreateSerializer(
+            issue,
+            data=request.data,
+            partial=True,
+            context={"project_id": project_id, "workspace_id": issue.workspace_id},
+        )
         if serializer.is_valid():
             serializer.save()
             # Check if the update is a migration description update

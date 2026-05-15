@@ -10,9 +10,12 @@ from typing import Optional, Any
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 # Module imports
 from .base import BaseModel
+from .team import Team
 from plane.utils.constants import RESTRICTED_WORKSPACE_SLUGS
 from plane.utils.color import get_random_color
 
@@ -203,6 +206,14 @@ class WorkspaceMember(BaseModel):
         related_name="member_workspace",
     )
     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=5)
+    role_id = models.ForeignKey(
+        "db.Role",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="workspace_members",
+        db_column="role_id",
+    )
     company_role = models.TextField(null=True, blank=True)
     view_props = models.JSONField(default=get_default_props)
     default_props = models.JSONField(default=get_default_props)
@@ -256,31 +267,6 @@ class WorkspaceMemberInvite(BaseModel):
 
     def __str__(self):
         return f"{self.workspace.name} {self.email} {self.accepted}"
-
-
-class Team(BaseModel):
-    name = models.CharField(max_length=255, verbose_name="Team Name")
-    description = models.TextField(verbose_name="Team Description", blank=True)
-    workspace = models.ForeignKey(Workspace, on_delete=models.CASCADE, related_name="workspace_team")
-    logo_props = models.JSONField(default=dict)
-
-    def __str__(self):
-        """Return name of the team"""
-        return f"{self.name} <{self.workspace.name}>"
-
-    class Meta:
-        unique_together = ["name", "workspace", "deleted_at"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["name", "workspace"],
-                condition=models.Q(deleted_at__isnull=True),
-                name="team_unique_name_workspace_when_deleted_at_null",
-            )
-        ]
-        verbose_name = "Team"
-        verbose_name_plural = "Teams"
-        db_table = "teams"
-        ordering = ("-created_at",)
 
 
 class WorkspaceTheme(BaseModel):
@@ -453,3 +439,26 @@ class WorkspaceUserPreference(BaseModel):
         verbose_name_plural = "Workspace User Preferences"
         db_table = "workspace_user_preferences"
         ordering = ("-created_at",)
+
+
+@receiver(post_save, sender=Workspace)
+def create_system_roles_for_workspace(sender, instance, created, **kwargs):
+    if not created:
+        return
+    try:
+        from plane.seeds.system_roles import seed_system_roles_for_workspace
+        seed_system_roles_for_workspace(instance)
+    except Exception:
+        # Seed table may not exist yet during initial migrations — skip silently.
+        pass
+
+
+@receiver(post_save, sender=WorkspaceMember)
+def sync_workspace_member_role_int(sender, instance, **kwargs):
+    """Keep WorkspaceMember.role (int) in sync with role_id.level when role_id is set."""
+    try:
+        role = instance.role_id
+        if role is not None and role.level is not None and instance.role != role.level:
+            WorkspaceMember.objects.filter(pk=instance.pk).update(role=role.level)
+    except Exception:
+        pass

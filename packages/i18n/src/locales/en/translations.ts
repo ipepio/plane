@@ -1322,6 +1322,9 @@ export default {
       },
     },
   },
+  workspace_intake: {
+    title: "Workspace intake",
+  },
   workspace_views: {
     add_view: "Add view",
     empty_state: {
@@ -1490,6 +1493,47 @@ export default {
           },
         },
       },
+      teams: {
+        title: "Teams",
+      },
+      templates: {
+        title: "Project templates",
+      },
+      time_tracking: {
+        title: "Time tracking",
+      },
+      sso: {
+        title: "SSO",
+        description: "Restrict Google sign-in to approved workspace domains and auto-provision matching users.",
+        loading: "Loading SSO settings...",
+        save: "Save settings",
+        enable: {
+          title: "Enable Google Workspace SSO",
+          description: "Users with approved Google Workspace domains can join this workspace automatically.",
+        },
+        domains: {
+          title: "Allowed domains",
+          description: "Add domains without @. Users signing in with Google from these domains can be provisioned.",
+          placeholder: "goguest.com",
+          add: "Add domain",
+        },
+        auto_provision: {
+          title: "Default role",
+          description: "Role assigned to new users provisioned through SSO.",
+        },
+        roles: {
+          admin: "Admin",
+          member: "Member",
+          guest: "Guest",
+        },
+        errors: {
+          domains_required: "Add at least one domain before enabling SSO.",
+        },
+        toasts: {
+          saved: "SSO settings saved",
+          save_failed: "Failed to save SSO settings",
+        },
+      },
       billing_and_plans: {
         heading: "Billing & Plans",
         description: "Choose your plan, manage subscriptions, and easily upgrade as your needs grow.",
@@ -1615,6 +1659,59 @@ export default {
         title: "No imports yet",
         description: "Find all your previous imports here and download them.",
       },
+      roles: {
+        title: "Roles",
+      },
+    },
+  },
+  roles: {
+    title: "Roles",
+    new_role: "New role",
+    system_badge: "System",
+    delete_confirm: 'Delete role "{name}"?',
+    system_banner: "This is a system role and cannot be modified.",
+    members_count: "{count} members",
+    save_changes: "Save changes",
+    discard: "Discard",
+    loading: "Loading...",
+    not_found: "Role not found.",
+    no_roles: "No roles found.",
+    form: {
+      name: "Role name",
+      description: "Description",
+      name_placeholder: "e.g. Viewer",
+      description_placeholder: "Optional description",
+    },
+    matrix: {
+      select_all: "Select all",
+      deselect_all: "Deselect all",
+      permissions_title: "Permissions",
+    },
+    category: {
+      workspace: "Workspace",
+      project: "Project",
+      issue: "Work item",
+      intake: "Intake",
+      worklog: "Worklog",
+      template: "Template",
+      team: "Team",
+      sso: "SSO",
+    },
+    toasts: {
+      created: "Role created",
+      create_failed: "Failed to create role",
+      saved: "Role saved",
+      save_failed: "Failed to save role",
+      deleted: "Role deleted",
+      delete_failed: "Failed to delete role",
+    },
+    delete_modal: {
+      title: "Delete role",
+      content: 'Are you sure you want to delete "{name}"? This cannot be undone.',
+    },
+    create_modal: {
+      title: "New role",
+      name_required: "Name is required",
     },
   },
   profile: {
@@ -1682,6 +1779,9 @@ export default {
     },
   },
   project_settings: {
+    issue_types: {
+      short_title: "Issue fields",
+    },
     general: {
       enter_project_id: "Enter project ID",
       please_select_a_timezone: "Please select a timezone",

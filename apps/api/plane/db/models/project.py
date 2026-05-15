@@ -12,6 +12,8 @@ from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 from django.db.models import Q
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 # Module imports
 from plane.db.mixins import AuditModel
@@ -217,6 +219,14 @@ class ProjectMember(ProjectBaseModel):
     )
     comment = models.TextField(blank=True, null=True)
     role = models.PositiveSmallIntegerField(choices=ROLE_CHOICES, default=5)
+    role_id = models.ForeignKey(
+        "db.Role",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="project_members",
+        db_column="role_id",
+    )
     view_props = models.JSONField(default=get_default_props)
     default_props = models.JSONField(default=get_default_props)
     preferences = models.JSONField(default=get_default_preferences)
@@ -371,3 +381,14 @@ class ProjectUserProperty(ProjectBaseModel):
     def __str__(self):
         """Return properties status of the project"""
         return str(self.user)
+
+
+@receiver(post_save, sender=ProjectMember)
+def sync_project_member_role_int(sender, instance, **kwargs):
+    """Keep ProjectMember.role (int) in sync with role_id.level when role_id is set."""
+    try:
+        role = instance.role_id
+        if role is not None and role.level is not None and instance.role != role.level:
+            ProjectMember.objects.filter(pk=instance.pk).update(role=role.level)
+    except Exception:
+        pass

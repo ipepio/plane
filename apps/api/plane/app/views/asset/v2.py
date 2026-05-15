@@ -3,6 +3,7 @@
 # See the LICENSE file for details.
 
 # Python imports
+import logging
 import uuid
 
 # Django imports
@@ -25,6 +26,9 @@ from plane.utils.cache import invalidate_cache_directly
 from plane.utils.path_validator import sanitize_filename
 from plane.bgtasks.storage_metadata_task import get_asset_object_metadata
 from plane.throttles.asset import AssetRateThrottle
+
+
+logger = logging.getLogger("plane")
 
 
 class UserAssetsV2Endpoint(BaseAPIView):
@@ -175,7 +179,10 @@ class UserAssetsV2Endpoint(BaseAPIView):
         asset.is_uploaded = True
         # get the storage metadata
         if not asset.storage_metadata:
-            get_asset_object_metadata.delay(asset_id=str(asset_id))
+            try:
+                get_asset_object_metadata.delay(asset_id=str(asset_id))
+            except Exception:
+                logger.exception("Failed to enqueue asset metadata task for asset %s", asset_id)
         # get the entity and save the asset id for the request field
         self.entity_asset_save(
             asset_id=asset_id,
@@ -386,7 +393,10 @@ class WorkspaceFileAssetEndpoint(BaseAPIView):
         asset.is_uploaded = True
         # get the storage metadata
         if not asset.storage_metadata:
-            get_asset_object_metadata.delay(asset_id=str(asset_id))
+            try:
+                get_asset_object_metadata.delay(asset_id=str(asset_id))
+            except Exception:
+                logger.exception("Failed to enqueue asset metadata task for asset %s", asset_id)
         # get the entity and save the asset id for the request field
         self.entity_asset_save(
             asset_id=asset_id,
@@ -589,7 +599,10 @@ class ProjectAssetEndpoint(BaseAPIView):
         asset.is_uploaded = True
         # get the storage metadata
         if not asset.storage_metadata:
-            get_asset_object_metadata.delay(asset_id=str(pk))
+            try:
+                get_asset_object_metadata.delay(asset_id=str(pk))
+            except Exception:
+                logger.exception("Failed to enqueue asset metadata task for asset %s", pk)
 
         # update the attributes
         asset.attributes = request.data.get("attributes", asset.attributes)

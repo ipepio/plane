@@ -15,8 +15,10 @@ from rest_framework import serializers
 from .base import BaseSerializer, DynamicBaseSerializer
 from .user import UserLiteSerializer
 from .state import StateLiteSerializer
+from .team import TeamSerializer
 from .project import ProjectLiteSerializer
 from .workspace import WorkspaceLiteSerializer
+from .issue_property import upsert_issue_property_values, validate_required_property_values
 from plane.db.models import (
     User,
     Issue,
@@ -24,6 +26,7 @@ from plane.db.models import (
     IssueComment,
     ProjectUserProperty,
     IssueAssignee,
+    IssueTeamAssignee,
     IssueSubscriber,
     IssueLabel,
     Label,
@@ -42,6 +45,7 @@ from plane.db.models import (
     IssueDescriptionVersion,
     ProjectMember,
     EstimatePoint,
+    Team,
 )
 from plane.utils.content_validator import (
     validate_html_content,
@@ -97,6 +101,9 @@ class IssueCreateSerializer(BaseSerializer):
         write_only=True,
         required=False,
     )
+    team_assignee_ids = serializers.ListField(child=serializers.UUIDField(), write_only=True, required=False)
+    team_assignees = serializers.ListField(child=serializers.UUIDField(), write_only=True, required=False)
+    property_values = serializers.JSONField(write_only=True, required=False)
     project_id = serializers.UUIDField(source="project.id", read_only=True)
     workspace_id = serializers.UUIDField(source="workspace.id", read_only=True)
 
@@ -116,6 +123,8 @@ class IssueCreateSerializer(BaseSerializer):
         data = super().to_representation(instance)
         assignee_ids = self.initial_data.get("assignee_ids")
         data["assignee_ids"] = assignee_ids if assignee_ids else []
+        team_assignees = self.initial_data.get("team_assignee_ids") or self.initial_data.get("team_assignees")
+        data["team_assignee_ids"] = team_assignees if team_assignees else []
         label_ids = self.initial_data.get("label_ids")
         data["label_ids"] = label_ids if label_ids else []
         return data
@@ -153,6 +162,19 @@ class IssueCreateSerializer(BaseSerializer):
                 is_active=True,
                 member_id__in=attrs["assignee_ids"],
             ).values_list("member_id", flat=True)
+
+        team_assignees = attrs.pop("team_assignees", None)
+        if team_assignees is not None and attrs.get("team_assignee_ids") is None:
+            attrs["team_assignee_ids"] = team_assignees
+
+        if attrs.get("team_assignee_ids", []):
+            attrs["team_assignee_ids"] = list(
+                Team.objects.filter(
+                    workspace_id=self.context["workspace_id"],
+                    id__in=attrs["team_assignee_ids"],
+                    deleted_at__isnull=True,
+                ).values_list("id", flat=True)
+            )
 
         # Validate labels are from project
         if attrs.get("label_ids"):
@@ -193,10 +215,21 @@ class IssueCreateSerializer(BaseSerializer):
         ):
             raise serializers.ValidationError("Estimate point is not valid please pass a valid estimate_point_id")
 
+        issue_type = attrs.get("type")
+        if issue_type:
+            validate_required_property_values(
+                issue_type.id,
+                self.context.get("project_id"),
+                self.initial_data.get("property_values"),
+            )
+
         return attrs
 
     def create(self, validated_data):
         assignees = validated_data.pop("assignee_ids", None)
+        team_assignees = validated_data.pop("team_assignee_ids", None)
+        validated_data.pop("team_assignees", None)
+        property_values = validated_data.pop("property_values", None)
         labels = validated_data.pop("label_ids", None)
 
         project_id = self.context["project_id"]
@@ -251,6 +284,26 @@ class IssueCreateSerializer(BaseSerializer):
                 except IntegrityError:
                     pass
 
+        if team_assignees is not None and len(team_assignees):
+            try:
+                IssueTeamAssignee.objects.bulk_create(
+                    [
+                        IssueTeamAssignee(
+                            team_id=team_id,
+                            issue=issue,
+                            project_id=project_id,
+                            workspace_id=workspace_id,
+                            created_by_id=created_by_id,
+                            updated_by_id=updated_by_id,
+                        )
+                        for team_id in team_assignees
+                    ],
+                    batch_size=10,
+                    ignore_conflicts=True,
+                )
+            except IntegrityError:
+                pass
+
         if labels is not None and len(labels):
             try:
                 IssueLabel.objects.bulk_create(
@@ -270,10 +323,16 @@ class IssueCreateSerializer(BaseSerializer):
             except IntegrityError:
                 pass
 
+        if property_values:
+            upsert_issue_property_values(issue, property_values, enforce_required=True)
+
         return issue
 
     def update(self, instance, validated_data):
         assignees = validated_data.pop("assignee_ids", None)
+        team_assignees = validated_data.pop("team_assignee_ids", None)
+        validated_data.pop("team_assignees", None)
+        property_values = validated_data.pop("property_values", None)
         labels = validated_data.pop("label_ids", None)
 
         # Related models
@@ -303,6 +362,27 @@ class IssueCreateSerializer(BaseSerializer):
             except IntegrityError:
                 pass
 
+        if team_assignees is not None:
+            IssueTeamAssignee.objects.filter(issue=instance).delete()
+            try:
+                IssueTeamAssignee.objects.bulk_create(
+                    [
+                        IssueTeamAssignee(
+                            team_id=team_id,
+                            issue=instance,
+                            project_id=project_id,
+                            workspace_id=workspace_id,
+                            created_by_id=created_by_id,
+                            updated_by_id=updated_by_id,
+                        )
+                        for team_id in team_assignees
+                    ],
+                    batch_size=10,
+                    ignore_conflicts=True,
+                )
+            except IntegrityError:
+                pass
+
         if labels is not None:
             IssueLabel.objects.filter(issue=instance).delete()
             try:
@@ -323,6 +403,9 @@ class IssueCreateSerializer(BaseSerializer):
                 )
             except IntegrityError:
                 pass
+
+        if property_values is not None:
+            upsert_issue_property_values(instance, property_values, enforce_required=True)
 
         # Time updation occues even when other related models are updated
         instance.updated_at = timezone.now()
@@ -483,6 +566,14 @@ class IssueAssigneeSerializer(BaseSerializer):
 
     class Meta:
         model = IssueAssignee
+        fields = "__all__"
+
+
+class IssueTeamAssigneeSerializer(BaseSerializer):
+    team_details = TeamSerializer(read_only=True, source="team")
+
+    class Meta:
+        model = IssueTeamAssignee
         fields = "__all__"
 
 
@@ -765,6 +856,7 @@ class IssueSerializer(DynamicBaseSerializer):
     # Many to many
     label_ids = serializers.ListField(child=serializers.UUIDField(), required=False)
     assignee_ids = serializers.ListField(child=serializers.UUIDField(), required=False)
+    team_assignee_ids = serializers.SerializerMethodField()
 
     # Count items
     sub_issues_count = serializers.IntegerField(read_only=True)
@@ -790,6 +882,7 @@ class IssueSerializer(DynamicBaseSerializer):
             "module_ids",
             "label_ids",
             "assignee_ids",
+            "team_assignee_ids",
             "sub_issues_count",
             "created_at",
             "updated_at",
@@ -810,6 +903,17 @@ class IssueSerializer(DynamicBaseSerializer):
             raise serializers.ValidationError("State is not valid please pass a valid state_id")
         return data
 
+    def get_team_assignee_ids(self, obj):
+        if hasattr(obj, "team_assignee_ids"):
+            return obj.team_assignee_ids or []
+        return list(
+            IssueTeamAssignee.objects.filter(
+                issue=obj,
+                team__deleted_at__isnull=True,
+                deleted_at__isnull=True,
+            ).values_list("team_id", flat=True)
+        )
+
 
 class IssueListDetailSerializer(serializers.Serializer):
     def __init__(self, *args, **kwargs):
@@ -827,6 +931,11 @@ class IssueListDetailSerializer(serializers.Serializer):
 
     def get_assignee_ids(self, obj):
         return [assignee.assignee_id for assignee in obj.issue_assignee.all()]
+
+    def get_team_assignee_ids(self, obj):
+        if hasattr(obj, "team_assignee_ids"):
+            return obj.team_assignee_ids or []
+        return [assignee.team_id for assignee in obj.issue_team_assignee.all() if assignee.team.deleted_at is None]
 
     def to_representation(self, instance):
         data = {
@@ -854,6 +963,7 @@ class IssueListDetailSerializer(serializers.Serializer):
             "module_ids": self.get_module_ids(instance),
             "label_ids": self.get_label_ids(instance),
             "assignee_ids": self.get_assignee_ids(instance),
+            "team_assignee_ids": self.get_team_assignee_ids(instance),
             "sub_issues_count": instance.sub_issues_count,
             "attachment_count": instance.attachment_count,
             "link_count": instance.link_count,

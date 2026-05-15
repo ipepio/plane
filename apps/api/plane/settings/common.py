@@ -119,7 +119,7 @@ ROOT_URLCONF = "plane.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ["templates"],
+        "DIRS": [os.path.join(os.path.dirname(BASE_DIR), "templates")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -136,11 +136,34 @@ TEMPLATES = [
 # CORS Settings
 CORS_ALLOW_CREDENTIALS = True
 cors_origins_raw = os.environ.get("CORS_ALLOWED_ORIGINS", "")
-# filter out empty strings
-cors_allowed_origins = [origin.strip() for origin in cors_origins_raw.split(",") if origin.strip()]
+
+
+def _origin_from_env_url(env_name):
+    raw_url = os.environ.get(env_name)
+    if not raw_url or not is_valid_url(raw_url):
+        return None
+
+    parsed_url = urlparse(raw_url)
+    return f"{parsed_url.scheme}://{parsed_url.netloc}"
+
+
+configured_base_origins = [
+    origin
+    for origin in (
+        _origin_from_env_url("APP_BASE_URL"),
+        _origin_from_env_url("ADMIN_BASE_URL"),
+        _origin_from_env_url("SPACE_BASE_URL"),
+        _origin_from_env_url("LIVE_BASE_URL"),
+        _origin_from_env_url("WEB_URL"),
+    )
+    if origin
+]
+cors_allowed_origins = list(
+    dict.fromkeys([origin.strip() for origin in cors_origins_raw.split(",") if origin.strip()] + configured_base_origins)
+)
 if cors_allowed_origins:
     CORS_ALLOWED_ORIGINS = cors_allowed_origins
-    secure_origins = False if [origin for origin in cors_allowed_origins if "http:" in origin] else True
+    secure_origins = False if [origin for origin in cors_allowed_origins if origin.startswith("http:")] else True
 else:
     CORS_ALLOW_ALL_ORIGINS = True
     secure_origins = False

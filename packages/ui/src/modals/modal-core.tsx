@@ -18,6 +18,7 @@ type Props = {
   position?: EModalPosition;
   width?: EModalWidth;
   className?: string;
+  closeOnOutsideClick?: boolean;
 };
 export function ModalCore(props: Props) {
   const {
@@ -27,11 +28,16 @@ export function ModalCore(props: Props) {
     position = EModalPosition.CENTER,
     width = EModalWidth.XXL,
     className = "",
+    closeOnOutsideClick = true,
   } = props;
+
+  const stopOutsideClickPropagation = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!closeOnOutsideClick) event.stopPropagation();
+  };
 
   return (
     <Transition.Root show={isOpen} as={Fragment}>
-      <Dialog as="div" className="relative z-30" onClose={() => handleClose && handleClose()}>
+      <Dialog as="div" className="relative z-30" onClose={() => closeOnOutsideClick && handleClose && handleClose()}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-300"
@@ -44,7 +50,11 @@ export function ModalCore(props: Props) {
           <div className="fixed inset-0 bg-backdrop transition-opacity" />
         </Transition.Child>
 
-        <div className="fixed inset-0 z-30 overflow-y-auto">
+        <div
+          className="fixed inset-0 z-30 overflow-y-auto"
+          data-prevent-outside-click={!closeOnOutsideClick ? true : undefined}
+          onMouseDown={stopOutsideClickPropagation}
+        >
           <div className={position}>
             <Transition.Child
               as={Fragment}

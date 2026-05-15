@@ -36,6 +36,7 @@ import { IssueActivity } from "./issue-activity";
 import { IssueParentDetail } from "./parent";
 import { IssueReaction } from "./reactions";
 import type { TIssueOperations } from "./root";
+import { WorklogSection } from "./worklog/worklog-section";
 // services init
 const workItemVersionService = new WorkItemVersionService();
 
@@ -174,10 +175,15 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
                 isRestoreDisabled: !isEditable || isArchived,
               }}
               fetchHandlers={{
-                listDescriptionVersions: (issueId) =>
-                  workItemVersionService.listDescriptionVersions(workspaceSlug, projectId, issueId),
-                retrieveDescriptionVersion: (issueId, versionId) =>
-                  workItemVersionService.retrieveDescriptionVersion(workspaceSlug, projectId, issueId, versionId),
+                listDescriptionVersions: (versionIssueId) =>
+                  workItemVersionService.listDescriptionVersions(workspaceSlug, projectId, versionIssueId),
+                retrieveDescriptionVersion: (versionIssueId, versionId) =>
+                  workItemVersionService.retrieveDescriptionVersion(
+                    workspaceSlug,
+                    projectId,
+                    versionIssueId,
+                    versionId
+                  ),
               }}
               handleRestore={(descriptionHTML) => editorRef.current?.setEditorValue(descriptionHTML, true)}
               projectId={projectId}
@@ -205,6 +211,13 @@ export const IssueMainContent = observer(function IssueMainContent(props: Props)
           disabled={!isEditable || isArchived}
         />
       )}
+
+      <WorklogSection
+        workspaceSlug={workspaceSlug}
+        projectId={projectId}
+        issueId={issueId}
+        disabled={!isEditable || isArchived}
+      />
 
       <IssueActivity workspaceSlug={workspaceSlug} projectId={projectId} issueId={issueId} disabled={isArchived} />
     </>

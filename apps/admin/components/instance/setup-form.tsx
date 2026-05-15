@@ -119,17 +119,17 @@ export function InstanceSetupForm() {
     } else return { type: undefined, message: undefined };
   }, [errorCode, errorMessage]);
 
+  const hasCsrfToken = !!csrfToken;
   const isButtonDisabled = useMemo(
     () =>
-      !isSubmitting &&
-      formData.first_name &&
-      formData.email &&
-      formData.password &&
-      getPasswordStrength(formData.password) === E_PASSWORD_STRENGTH.STRENGTH_VALID &&
-      formData.password === formData.confirm_password
-        ? false
-        : true,
-    [formData.confirm_password, formData.email, formData.first_name, formData.password, isSubmitting]
+      isSubmitting ||
+      !hasCsrfToken ||
+      !formData.first_name ||
+      !formData.email ||
+      !formData.password ||
+      getPasswordStrength(formData.password) !== E_PASSWORD_STRENGTH.STRENGTH_VALID ||
+      formData.password !== formData.confirm_password,
+    [formData.confirm_password, formData.email, formData.first_name, formData.password, hasCsrfToken, isSubmitting]
   );
 
   const password = formData?.password ?? "";
@@ -157,7 +157,7 @@ export function InstanceSetupForm() {
             onSubmit={() => setIsSubmitting(true)}
             onError={() => setIsSubmitting(false)}
           >
-            <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken} />
+            <input type="hidden" name="csrfmiddlewaretoken" value={csrfToken ?? ""} />
             <input type="hidden" name="is_telemetry_enabled" value={formData.is_telemetry_enabled ? "True" : "False"} />
 
             <div className="flex flex-col items-center gap-4 sm:flex-row">

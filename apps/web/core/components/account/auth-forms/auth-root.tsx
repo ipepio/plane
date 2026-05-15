@@ -39,6 +39,8 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
   const invitation_id = searchParams.get("invitation_id");
   const workspaceSlug = searchParams.get("slug");
   const error_code = searchParams.get("error_code");
+  const error = searchParams.get("error");
+  const blockedWorkspace = searchParams.get("ws");
   // props
   const { authMode: currentAuthMode } = props;
   // states
@@ -59,6 +61,18 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
   }, [currentAuthMode, authMode]);
 
   useEffect(() => {
+    if (error === "sso_blocked") {
+      setErrorInfo({
+        type: EErrorAlertType.BANNER_ALERT,
+        code: EAuthenticationErrorCodes.SSO_DOMAIN_BLOCKED,
+        title: "Google Workspace access restricted",
+        message: blockedWorkspace
+          ? `Your Google account is not allowed to access ${blockedWorkspace}.`
+          : "Your Google account is not allowed to access this workspace.",
+      });
+      return;
+    }
+
     if (error_code && authMode) {
       const errorhandler = authErrorHandler(error_code?.toString() as EAuthenticationErrorCodes);
       if (errorhandler) {
@@ -98,7 +112,7 @@ export const AuthRoot = observer(function AuthRoot(props: TAuthRoot) {
         setErrorInfo(errorhandler);
       }
     }
-  }, [error_code, authMode]);
+  }, [error, blockedWorkspace, error_code, authMode]);
 
   if (!authMode) return <></>;
 

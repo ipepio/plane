@@ -1355,6 +1355,9 @@ export default {
       },
     },
   },
+  workspace_intake: {
+    title: "Intake del espacio de trabajo",
+  },
   workspace_analytics: {
     label: "Análisis",
     page_label: "{workspace} - Análisis",
@@ -1551,6 +1554,56 @@ export default {
     },
   },
   account_settings: {
+    roles: {
+      title: "Roles",
+      new_role: "New role",
+      system_badge: "System",
+      delete_confirm: 'Delete role "{name}"?',
+      system_banner: "This is a system role and cannot be modified.",
+      members_count: "{count} members",
+      save_changes: "Save changes",
+      discard: "Discard",
+      loading: "Loading...",
+      not_found: "Role not found.",
+      no_roles: "No roles found.",
+      form: {
+        name: "Role name",
+        description: "Description",
+        name_placeholder: "e.g. Viewer",
+        description_placeholder: "Optional description",
+      },
+      matrix: {
+        select_all: "Select all",
+        deselect_all: "Deselect all",
+        permissions_title: "Permissions",
+      },
+      category: {
+        workspace: "Workspace",
+        project: "Project",
+        issue: "Work item",
+        intake: "Intake",
+        worklog: "Worklog",
+        template: "Template",
+        team: "Team",
+        sso: "SSO",
+      },
+      toasts: {
+        created: "Role created",
+        create_failed: "Failed to create role",
+        saved: "Role saved",
+        save_failed: "Failed to save role",
+        deleted: "Role deleted",
+        delete_failed: "Failed to delete role",
+      },
+      delete_modal: {
+        title: "Delete role",
+        content: 'Are you sure you want to delete "{name}"? This cannot be undone.',
+      },
+      create_modal: {
+        title: "New role",
+        name_required: "Name is required",
+      },
+    },
     profile: {
       change_email_modal: {
         title: "Cambiar correo electrónico",
@@ -1659,6 +1712,47 @@ export default {
             required: "Necesitamos una dirección de correo electrónico para invitarlos.",
             invalid: "El correo electrónico no es válido",
           },
+        },
+      },
+      teams: {
+        title: "Equipos",
+      },
+      templates: {
+        title: "Plantillas de proyecto",
+      },
+      time_tracking: {
+        title: "Registro de tiempo",
+      },
+      sso: {
+        title: "SSO",
+        description: "Restrict Google sign-in to approved workspace domains and auto-provision matching users.",
+        loading: "Loading SSO settings...",
+        save: "Save settings",
+        enable: {
+          title: "Enable Google Workspace SSO",
+          description: "Users with approved Google Workspace domains can join this workspace automatically.",
+        },
+        domains: {
+          title: "Allowed domains",
+          description: "Add domains without @. Users signing in with Google from these domains can be provisioned.",
+          placeholder: "goguest.com",
+          add: "Add domain",
+        },
+        auto_provision: {
+          title: "Default role",
+          description: "Role assigned to new users provisioned through SSO.",
+        },
+        roles: {
+          admin: "Admin",
+          member: "Member",
+          guest: "Guest",
+        },
+        errors: {
+          domains_required: "Add at least one domain before enabling SSO.",
+        },
+        toasts: {
+          saved: "SSO settings saved",
+          save_failed: "Failed to save SSO settings",
         },
       },
       billing_and_plans: {
@@ -1778,6 +1872,60 @@ export default {
         title: "No hay importaciones aún",
         description: "Encuentra todas tus importaciones anteriores aquí y descárgalas.",
       },
+      roles: {
+        title: "Roles",
+      },
+    },
+  },
+
+  roles: {
+    title: "Roles",
+    new_role: "New role",
+    system_badge: "System",
+    delete_confirm: 'Delete role "{name}"?',
+    system_banner: "This is a system role and cannot be modified.",
+    members_count: "{count} members",
+    save_changes: "Save changes",
+    discard: "Discard",
+    loading: "Loading...",
+    not_found: "Role not found.",
+    no_roles: "No roles found.",
+    form: {
+      name: "Role name",
+      description: "Description",
+      name_placeholder: "e.g. Viewer",
+      description_placeholder: "Optional description",
+    },
+    matrix: {
+      select_all: "Select all",
+      deselect_all: "Deselect all",
+      permissions_title: "Permissions",
+    },
+    category: {
+      workspace: "Workspace",
+      project: "Project",
+      issue: "Work item",
+      intake: "Intake",
+      worklog: "Worklog",
+      template: "Template",
+      team: "Team",
+      sso: "SSO",
+    },
+    toasts: {
+      created: "Role created",
+      create_failed: "Failed to create role",
+      saved: "Role saved",
+      save_failed: "Failed to save role",
+      deleted: "Role deleted",
+      delete_failed: "Failed to delete role",
+    },
+    delete_modal: {
+      title: "Delete role",
+      content: 'Are you sure you want to delete "{name}"? This cannot be undone.',
+    },
+    create_modal: {
+      title: "New role",
+      name_required: "Name is required",
     },
   },
   profile: {
@@ -1810,6 +1958,56 @@ export default {
       },
     },
     actions: {
+      roles: {
+        title: "Roles",
+        new_role: "New role",
+        system_badge: "System",
+        delete_confirm: 'Delete role "{name}"?',
+        system_banner: "This is a system role and cannot be modified.",
+        members_count: "{count} members",
+        save_changes: "Save changes",
+        discard: "Discard",
+        loading: "Loading...",
+        not_found: "Role not found.",
+        no_roles: "No roles found.",
+        form: {
+          name: "Role name",
+          description: "Description",
+          name_placeholder: "e.g. Viewer",
+          description_placeholder: "Optional description",
+        },
+        matrix: {
+          select_all: "Select all",
+          deselect_all: "Deselect all",
+          permissions_title: "Permissions",
+        },
+        category: {
+          workspace: "Workspace",
+          project: "Project",
+          issue: "Work item",
+          intake: "Intake",
+          worklog: "Worklog",
+          template: "Template",
+          team: "Team",
+          sso: "SSO",
+        },
+        toasts: {
+          created: "Role created",
+          create_failed: "Failed to create role",
+          saved: "Role saved",
+          save_failed: "Failed to save role",
+          deleted: "Role deleted",
+          delete_failed: "Failed to delete role",
+        },
+        delete_modal: {
+          title: "Delete role",
+          content: 'Are you sure you want to delete "{name}"? This cannot be undone.',
+        },
+        create_modal: {
+          title: "New role",
+          name_required: "Name is required",
+        },
+      },
       profile: "Perfil",
       security: "Seguridad",
       activity: "Actividad",
@@ -1844,6 +2042,9 @@ export default {
     },
   },
   project_settings: {
+    issue_types: {
+      short_title: "Campos de issue",
+    },
     general: {
       enter_project_id: "Ingresa el ID del proyecto",
       please_select_a_timezone: "Por favor selecciona una zona horaria",
