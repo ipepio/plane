@@ -87,6 +87,11 @@ export const coreRoutes: RouteConfigEntry[] = [
           route(":workspaceSlug/notifications", "./(all)/[workspaceSlug]/(projects)/notifications/page.tsx"),
         ]),
 
+        // Workspace Intake
+        layout("./(all)/[workspaceSlug]/(projects)/workspace-intake/layout.tsx", [
+          route(":workspaceSlug/workspace-intake", "./(all)/[workspaceSlug]/(projects)/workspace-intake/page.tsx"),
+        ]),
+
         // Profile
         layout("./(all)/[workspaceSlug]/(projects)/profile/[userId]/layout.tsx", [
           route(":workspaceSlug/profile/:userId", "./(all)/[workspaceSlug]/(projects)/profile/[userId]/page.tsx"),
@@ -103,6 +108,11 @@ export const coreRoutes: RouteConfigEntry[] = [
         // Stickies
         layout("./(all)/[workspaceSlug]/(projects)/stickies/layout.tsx", [
           route(":workspaceSlug/stickies", "./(all)/[workspaceSlug]/(projects)/stickies/page.tsx"),
+        ]),
+
+        // Time Tracking
+        layout("./(all)/[workspaceSlug]/(projects)/time-tracking/layout.tsx", [
+          route(":workspaceSlug/time-tracking", "./(all)/[workspaceSlug]/(projects)/time-tracking/page.tsx"),
         ]),
 
         // Workspace Views
@@ -267,6 +277,26 @@ export const coreRoutes: RouteConfigEntry[] = [
             "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/members/page.tsx"
           ),
           route(
+            ":workspaceSlug/settings/teams",
+            "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/teams/page.tsx"
+          ),
+          route(
+            ":workspaceSlug/settings/teams/:teamId",
+            "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/teams/[teamId]/page.tsx"
+          ),
+          route(
+            ":workspaceSlug/settings/templates",
+            "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/templates/page.tsx"
+          ),
+          route(
+            ":workspaceSlug/settings/reports",
+            "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/reports/page.tsx"
+          ),
+          route(
+            ":workspaceSlug/settings/reports/time-tracking",
+            "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/reports/time-tracking/page.tsx"
+          ),
+          route(
             ":workspaceSlug/settings/billing",
             "./(all)/[workspaceSlug]/(settings)/settings/(workspace)/billing/page.tsx"
           ),
@@ -337,6 +367,14 @@ export const coreRoutes: RouteConfigEntry[] = [
             route(
               ":workspaceSlug/settings/projects/:projectId/estimates",
               "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/estimates/page.tsx"
+            ),
+            route(
+              ":workspaceSlug/settings/projects/:projectId/issue-types",
+              "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/issue-types/page.tsx"
+            ),
+            route(
+              ":workspaceSlug/settings/projects/:projectId/issue-types/:issueTypeId/properties",
+              "./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/issue-types/[issueTypeId]/properties/page.tsx"
             ),
             // Project Automations
             layout("./(all)/[workspaceSlug]/(settings)/settings/projects/[projectId]/automations/layout.tsx", [

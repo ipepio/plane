@@ -4,6 +4,7 @@
  * See the LICENSE file for details.
  */
 
+import { Timer } from "lucide-react";
 import {
   AnalyticsIcon,
   ArchiveIcon,
@@ -11,6 +12,7 @@ import {
   DraftIcon,
   HomeIcon,
   InboxIcon,
+  IntakeIcon,
   MultipleStickyIcon,
   ProjectIcon,
   ViewsIcon,
@@ -26,6 +28,8 @@ export const getSidebarNavigationItemIcon = (key: string, className: string = ""
       return <InboxIcon className={cn("size-4 flex-shrink-0", className)} />;
     case "projects":
       return <ProjectIcon className={cn("size-4 flex-shrink-0", className)} />;
+    case "workspace_intake":
+      return <IntakeIcon className={cn("size-4 flex-shrink-0 stroke-1", className)} />;
     case "views":
       return <ViewsIcon className={cn("size-4 flex-shrink-0", className)} />;
     case "active_cycles":
@@ -40,5 +44,7 @@ export const getSidebarNavigationItemIcon = (key: string, className: string = ""
       return <ArchiveIcon className={cn("size-4 flex-shrink-0", className)} />;
     case "stickies":
       return <MultipleStickyIcon className={cn("size-4 flex-shrink-0", className)} />;
+    case "time_tracking":
+      return <Timer className={cn("size-4 flex-shrink-0", className)} />;
   }
 };

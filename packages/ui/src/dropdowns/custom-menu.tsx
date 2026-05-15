@@ -86,7 +86,7 @@ function CustomMenu(props: ICustomMenuDropdownProps) {
     useCaptureForOutsideClick = false,
   } = props;
 
-  const [referenceElement, setReferenceElement] = React.useState<HTMLButtonElement | null>(null);
+  const [referenceElement, setReferenceElement] = React.useState<HTMLButtonElement | HTMLDivElement | null>(null);
   const [popperElement, setPopperElement] = React.useState<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = React.useState(false);
   // refs
@@ -242,17 +242,17 @@ function CustomMenu(props: ICustomMenuDropdownProps) {
         <>
           {customButton ? (
             <Menu.Button as={React.Fragment}>
-              <button
-                ref={setReferenceElement}
-                type="button"
+              <div
+                ref={setReferenceElement as React.Ref<HTMLDivElement>}
+                role="button"
                 onClick={handleMenuButtonClick}
                 className={customButtonClassName}
                 tabIndex={customButtonTabIndex}
-                disabled={disabled}
                 aria-label={ariaLabel}
+                aria-disabled={disabled}
               >
                 {customButton}
-              </button>
+              </div>
             </Menu.Button>
           ) : (
             <>

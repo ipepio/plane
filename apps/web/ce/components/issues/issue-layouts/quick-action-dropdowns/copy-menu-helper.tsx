@@ -22,7 +22,12 @@ export interface CopyMenuHelperProps {
 }
 
 export const createCopyMenuWithDuplication = (props: CopyMenuHelperProps): TContextMenuItem => {
-  const { baseItem } = props;
+  const { baseItem, setDuplicateWorkItemModal } = props;
 
-  return baseItem;
+  if (!setDuplicateWorkItemModal) return baseItem;
+
+  return {
+    ...baseItem,
+    action: () => setDuplicateWorkItemModal(true),
+  };
 };

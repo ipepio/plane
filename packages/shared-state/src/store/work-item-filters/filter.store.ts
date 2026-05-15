@@ -90,10 +90,6 @@ export class WorkItemFilterStore implements IWorkItemFilterStore {
       if (params.onExpressionChange) {
         existingFilter.onExpressionChange = params.onExpressionChange;
       }
-      // Update visibility if provided
-      if (params.showOnMount !== undefined) {
-        existingFilter.toggleVisibility(params.showOnMount);
-      }
       return existingFilter;
     }
 

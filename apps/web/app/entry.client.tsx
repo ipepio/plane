@@ -4,15 +4,10 @@
  * See the LICENSE file for details.
  */
 
-import { startTransition, StrictMode } from "react";
+import { startTransition } from "react";
 import { hydrateRoot } from "react-dom/client";
 import { HydratedRouter } from "react-router/dom";
 
 startTransition(() => {
-  hydrateRoot(
-    document,
-    <StrictMode>
-      <HydratedRouter />
-    </StrictMode>
-  );
+  hydrateRoot(document, <HydratedRouter />);
 });
